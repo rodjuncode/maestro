@@ -171,16 +171,30 @@ function draw() {
 
 function mousePressed() {
     mouseButtonInfo = mouseButton;
-
-    if (maestro.isPlaying) {
-        if (mouseX > 150 && mouseX < 550 &&
-            mouseY > 400 && mouseY < 450) {
-            cursor(CROSS);
-            console.log("click");
-        } 
+    let mouseCursor = createVector(mouseX,mouseY);
+    let startCursor = createVector(maestro.hudPosition.x+map(maestro.trimStart,0,maestro.frames.length-1,-200,200),maestro.hudPosition.y+80);
+    let endCursor = createVector(maestro.hudPosition.x+map(maestro.trimEnd,0,maestro.frames.length-1,-200,200),maestro.hudPosition.y+80);
+    if (mouseCursor.dist(startCursor) < 10) {
+        maestro.startCursor = true;
     }
-
+    if (mouseCursor.dist(endCursor) < 10) {
+        maestro.endCursor = true;
+    }    
+    let leftLimit = map(maestro.trimStart,0,maestro.frames.length-1,-200,200);
+    let rightLimit = map(maestro.trimEnd,0,maestro.frames.length-1,-200,200);
+    if ((mouseX >= maestro.hudPosition.x + leftLimit && mouseX <= maestro.hudPosition.x + rightLimit) &&
+        (mouseY >= maestro.hudPosition.y + 48 && mouseY <= maestro.hudPosition.y + 68)) {
+            let f = map(mouseX,maestro.hudPosition.x+leftLimit,maestro.hudPosition.x+rightLimit,maestro.trimStart,maestro.trimEnd);
+            maestro.frame = floor(f);
+        }
+    
 }
+
+function mouseReleased() {
+    maestro.startCursor = false;
+    maestro.endCursor = false;
+}
+
 
 // converts word to points
 function txt2Points(txt, x, y, size) {

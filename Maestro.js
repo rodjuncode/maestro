@@ -5,6 +5,11 @@ function Maestro() {
     this.record = {};
     this.frames = [];
 
+    this.trimStart = 0;
+    this.trimEnd = 0;
+    this.startCursor = false;
+    this.endCursor = false;
+
     this.hudPosition = createVector(width/2,height/2);
     this.timeLinePosition = createVector(width/2,height/2);
 
@@ -17,6 +22,8 @@ function Maestro() {
 
     this.stopRecording = function() {
         this.isRecording = false;
+        this.trimStart = 0;
+        this.trimEnd = Object.keys(this.record).length-1;
     }
 
     this.hud = function() {
@@ -42,13 +49,25 @@ function Maestro() {
             vertex(5,0);
             vertex(-3,-5);
             endShape(CLOSE);
-            fill(color(0,0,95,95));
-            rect(-200,50,400,50);
+            fill(color(0,0,100,100));
+            rect(-200,50,400,15);
+            fill(color(0,0,70,100));
+            rect(map(this.trimStart,0,this.frames.length-1,-200,200),
+                 50,
+                 map(this.trimEnd-this.trimStart,0,this.frames.length-1,0,400),
+                 15);
             rectMode(CENTER);
-            fill(color(300,100,100));
-            rect(map(this.frame,0,this.frames.length-1,-200,200),75,1,50);
+            fill(color(0));
+            rect(map(this.frame,0,this.frames.length-1,-200,200),58,3,20);
+            stroke(0,0,0);
+            strokeWeight(2);
+            fill(0,0,100);
+            ellipse(map(this.trimStart,0,this.frames.length-1,-200,200),80,9,9);
+            rectMode(CENTER);
+            rect(map(this.trimEnd,0,this.frames.length-1,-200,200),80,8,8);
+
             pop();
-        }        
+        }       
         //console.log(this.record);
     }
 
@@ -62,11 +81,12 @@ function Maestro() {
     }
 
     this.play = function() {
-        if (Object.keys(this.record).length > 0) {
-            this.isRecording = false;
-            this.isPlaying = true;
-            this.frame = 0;
-            this.frames = Object.keys(this.record);
+        if (!this.isRecording) {
+            if (Object.keys(this.record).length > 0) {
+                this.isPlaying = true;
+                this.frame = this.trimStart;
+                this.frames = Object.keys(this.record);
+            }
         }
     }
 
@@ -76,17 +96,19 @@ function Maestro() {
 
     this.tempo = function() {
         this.frame++;
-        if (this.frame == this.frames.length) {
-            this.frame = 0;
+        // let xToBeEased = map(this.frame,this.trimStart,this.trimEnd,0,1);
+        // let xEased = easeInSine(xToBeEased);
+        // this.frame = ceil(map(xEased,0,1,this.trimStart,this.trimEnd));
+        if (this.frame > this.trimEnd) {
+            this.frame = this.trimStart;
         }
-        if (this.isPlaying) {
-            if (mouseX > 150 && mouseX < 550 &&
-                mouseY > 400 && mouseY < 450) {
-                cursor(CROSS);
-            } else {
-                cursor(ARROW);
-            }
+        if (this.startCursor) {
+            this.trimStart = constrain(floor(map(mouseX,150,550,0,this.frames.length-1)),0,this.trimEnd-1);
         }
+        if (this.endCursor) {
+            this.trimEnd = constrain(floor(map(mouseX,150,550,0,this.frames.length-1)),this.trimStart+1,Object.keys(maestro.record).length-1);
+        }
+
     }
 
     this.tell = function(k) {
@@ -96,3 +118,7 @@ function Maestro() {
     }
 
 }
+
+function easeInSine(x) {
+    return 1 - cos((x * PI) / 2);
+  }
